@@ -1,6 +1,7 @@
 ﻿import socket,time
 from threading import Thread
 import os
+import getpass
 from rich.console import Console
 from pathlib import Path
 import time
@@ -99,7 +100,6 @@ class Manager:
                         filename = c.recv()
                         if not os.path.exists("file"):
                             os.makedirs("file")
-                        filename = filename.split('/')[len(filename.split('/')) - 1]
                         oldfilename = filename
                         filename = str(fileidx) + " " + str(time.strftime("%Y.%m.%d.%H.%M.%S")) + " " + c.username + " " + filename
                         fileidx = fileidx + 1
@@ -279,7 +279,7 @@ def main(host, port):
     s.print("欢迎使用 OIChat ！", justify="center", end="\n\n")
     s.print("服务器已成功在 %s 端口开启！" % (port), style = "bold green")
     s.print("管理员账户：[ " + op + " ]", style = "bold blue")
-    s.print("管理员密码：[ " + oppassword + " ]", style = "bold blue")
+    s.print("管理员密码：请查看 `config.txt` 内的密码。", style = "bold blue")
     while True:
         conn, addr = server.accept()
         c = Manager(conn,addr,"")
@@ -324,12 +324,20 @@ if __name__ == "__main__":
         hosttmp = "0.0.0.0"
         porttmp = int(input("请输入开服端口："))
         op = input("设置管理员账号名称：")
-        oppassword = input("设置管理员账号密码：")
+        oppassword = ""
+        oppassword1 = "1"
+        oppassword = getpass.getpass("设置管理员账号密码（输入内容不会显示）：")
+        oppassword1 = getpass.getpass("再次输入密码确认：")
+        while oppassword != oppassword1:
+            print("两次密码不匹配，请重新输入！")
+            oppassword = getpass.getpass("设置管理员账号密码：")
+            oppassword1 = getpass.getpass("再次输入密码确认：")
         config = open("config.txt", "w")
         config.write(str(porttmp) + "\n")
         config.write(op + "\n")
         config.write(oppassword)
         config.close()
     finally:
+        os.system("cls")
         main(hosttmp, porttmp)
         print("服务器已关闭")

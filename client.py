@@ -170,23 +170,20 @@ class filewindow(object):
             return
         try:
             f = open(data, "rb")
-            ui.send("读取文件成功...")
-            try:
-                ui.send("正在发送文件...")
-                self.c.send("!!!file".encode("utf-8"))
-                data = os.path.basename(data)
-                self.c.send(data.encode("utf-8"))
-                print(data)
-                self.c.sendall(f.read())
-                time.sleep(5)
-                self.c.send(b"!!!endfile")
-            except:
-                ui.send("发送文件失败！")
+            ui.send("正在发送文件...")
+            self.c.send("!!!file".encode("utf-8"))
+            data = os.path.basename(data)
+            self.c.send(data.encode("utf-8"))
+            print(data)
+            self.c.sendall(f.read())
+            time.sleep(5)
+            self.c.send(b"!!!endfile")
             f.close()
         except:
-            ui.send("读取文件失败！")
+            ui.send("发送文件失败！")
         finally:
             self.lineEdit.setText("")
+            self.Form.close()
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(483, 156)
