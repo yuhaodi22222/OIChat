@@ -1,6 +1,6 @@
 ## **OIChat**
 
-OIChat，局域网聊天室。使用 GPL 开源协议。
+OIChat，局域网聊天室。
 
 使用 Python 开发，GUI 使用 PyQt5 开发。
 
