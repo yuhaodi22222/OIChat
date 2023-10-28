@@ -69,6 +69,7 @@ class GUI(object):
         self.pushButton_2.clicked.connect(self.codeclick)
         self.pushButton_3.clicked.connect(self.fileclick)
         Form.setWindowIcon(QtGui.QIcon("./client.ico"))
+        self.textEdit.setFontFamily("Consolas")
     def codeclick(self):
         codeewindow = QtWidgets.QWidget()
         self.ui = codewindow(self.c, codeewindow)
@@ -260,7 +261,7 @@ class showgui():
         self.setup()
     def setup(self):
         app = QtWidgets.QApplication(sys.argv)
-        apply_stylesheet(app, theme='default_light.xml')
+        # apply_stylesheet(app, theme='default_light.xml')
         global ui
         self.guimainwindow = QtWidgets.QWidget()
         ui = GUI(self.c, self.guimainwindow)
@@ -273,7 +274,7 @@ class Chatter:
     def recv(c, showguit):
         while True:
             app = QtWidgets.QApplication(sys.argv)
-            apply_stylesheet(app, theme='default_light.xml')
+            # apply_stylesheet(app, theme='default_light.xml')
             widget = QtWidgets.QWidget()
             name = namewindow()
             name.setupUi(widget)
@@ -286,7 +287,7 @@ class Chatter:
         c.send(username.encode("utf-8"))
         showguit.start()
         time.sleep(1)
-        ui.send("欢迎使用 OIChat !\n\n")
+        ui.send("欢迎使用 OIChat !\n")
         while running:
             try:
                 data = c.recv(102400).decode("utf-8")
@@ -334,7 +335,7 @@ class Chatter:
                 break
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    apply_stylesheet(app, theme='default_light.xml')
+    # apply_stylesheet(app, theme='default_light.xml')
     widget = QtWidgets.QWidget()
     ipport = ipportwindow()
     ipport.setupUi(widget)
