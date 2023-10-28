@@ -240,6 +240,11 @@ class namewindow(object):
         self.pushButton.clicked.connect(self.click)
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
+        reg = QtCore.QRegExp("[a-zA-Z0-9]+$")
+        regVal = QtGui.QRegExpValidator()
+        regVal.setRegExp(reg)
+        self.lineEdit.setValidator(regVal)
+        self.lineEdit.setMaxLength(16)
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
