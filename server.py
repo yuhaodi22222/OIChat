@@ -270,7 +270,7 @@ class Manager:
         for c in clients.values():
             c.sendMsg(msg,username)
 
-def main(host, port):
+def main(host, port, flag):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
@@ -280,6 +280,11 @@ def main(host, port):
     s.print("服务器已成功在 %s 端口开启！" % (port), style = "bold green")
     s.print("管理员账户：[ " + op + " ]", style = "bold blue")
     s.print("管理员密码：请查看 `config.txt` 内的密码。", style = "bold blue")
+    if flag == 1:
+        s.print("是否打开官网（Y / N）：", end = "")
+        tmpp = input()
+        if tmpp == "y" or tmpp == "Y":
+            os.system("start https://github.com/yuhaodi22222/OIChat")
     while True:
         conn, addr = server.accept()
         c = Manager(conn,addr,"")
@@ -294,6 +299,7 @@ if __name__ == "__main__":
     clients = {}
     iports = {}
     fileidx = 0
+    flag = 0
     try:
         path = Path("./file")
         files = [file.name for file in path.rglob("*.*")]
@@ -337,7 +343,8 @@ if __name__ == "__main__":
         config.write(op + "\n")
         config.write(oppassword)
         config.close()
+        flag = 1
     finally:
         os.system("cls")
-        main(hosttmp, porttmp)
+        main(hosttmp, porttmp, flag)
         print("服务器已关闭")
