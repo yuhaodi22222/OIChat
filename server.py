@@ -8,11 +8,24 @@ import time
 global op
 nameipdic = {}
 ipnamedic = {}
-screendic = {}
 global hosttmp
 global porttmp
 fileidx = 1
 oppassword = 123456
+version = "2.0.5" # 版本号
+
+def resetdata(data):   # 防止使用 \r 冒充系统消息
+    tmp = ""
+    try:
+        for i in data:
+            if i == "\r":
+                tmp = tmp + "\\r"
+            else:
+                tmp = tmp + i
+    except:
+        return data
+    return tmp
+
 class Manager:
     def __init__(self,socket,addr,username):
         self.ip = addr[0]
@@ -20,6 +33,7 @@ class Manager:
         self.username = username
         self.socket=socket
         self.lastsendtime = 0
+        self.version = ""
     def sendMsg(self,msg,username):
         try:
             self.socket.send(("%s %s: %s" %(self.getTime(), username, msg)).encode("utf-8"))
@@ -50,6 +64,9 @@ class Manager:
         self.socket.send("!!!ban".encode("utf-8"))
         time.sleep(1)
         self.close()
+    def kick2(self):  # 版本号相差过大
+        time.sleep(1)
+        self.close()
     def getId(self):
         return "%s-%s" % (self.ip,self.port)
     def getTime(self):
@@ -69,8 +86,9 @@ class Manager:
                     c.banned()
                     time.sleep(1)
                     return
-            c.username = data
-            sleeptime = 2.5
+            c.username = data.split(" ")[0]
+            c.version = data.split(" ")[1]
+            sleeptime = 2
             if c.username == op:
                 time.sleep(2)
                 c.socket.send("!!!password".encode("utf-8"))
@@ -80,17 +98,44 @@ class Manager:
                     c.socket.close()
                     return
                 sleeptime = 0.5
+            try:
+                if c.version.split(".")[0] != version.split(".")[0] or c.version.split(".")[1] != version.split(".")[1]:
+                    s.print("用户 " + c.username + " " + c.ip + "[" + str(c.port) + "] 因为版本号相差过大而无法连接。", style="bold yellow")
+                    c.socket.send("!!!warning 版本号相差过大，无法连接。".encode("utf-8"))
+                    c.kick2()
+                    try:
+                        del nameipdic[c.username]
+                        del ipnamedic[("%s-%s" % (c.ip, c.port))]
+                        clients.pop(c.getId())
+                    except:
+                        pass
+                    return
+            except:
+                s.print("用户 " + c.username + " " + c.ip + "[" + str(c.port) + "] 因为版本号相差过大而无法连接。", style="bold yellow")
+                c.socket.send("!!!warning 版本号相差过大，无法连接。".encode("utf-8"))
+                c.kick2()
+                try:
+                    del nameipdic[c.username]
+                    del ipnamedic[("%s-%s" % (c.ip, c.port))]
+                    clients.pop(c.getId())
+                except:
+                    pass
+                return
             s.print("用户 %s %s[%s] 已连接" %(c.username,c.ip,c.port), style = "bold yellow")
             nameipdic[c.username] = "%s-%s" % (c.ip, c.port)
             ipnamedic[("%s-%s" % (c.ip, c.port))] = c.username
             usercnt = len(nameipdic)
             iports[c.username] = f'{c.ip}-{c.port}'
             time.sleep(sleeptime)
-            c.socket.send(("欢迎来到 OIChat !\n当前在线用户 " + str(usercnt) + " 人。\n输入 '/help' 获取帮助 。 ").encode("utf-8"))
+            c.socket.send(("欢迎来到 OIChat !\n当前在线用户 " + str(usercnt) + " 人。\n输入 '/help' 获取帮助 。\n").encode("utf-8"))
             time.sleep(0.5)
             Manager.broadcast("用户 " + c.username + " 加入了聊天室，当前在线 " + str(usercnt) + " 人。", "系统消息")
+            if c.version != version: # 版本号校验
+                data = "!!!warning 警告：您的版本为 " + c.version + ", 而服务端的版本为 " + version + ", 可能出现问题。"
+                c.socket.send(data.encode("utf-8"))
             while True:
                 data = c.recv()
+                data = resetdata(data)
                 if not data:
                     break
                 elif data[0:3] == "!!!":
@@ -276,15 +321,17 @@ def main(host, port, flag):
 
     server.bind((host, port))
     server.listen(10)
-    s.print("欢迎使用 OIChat ！", justify="center", end="\n\n")
+    s.print("欢迎使用 OIChat " + version + " ！", justify="center", end="\n\n")
     s.print("服务器已成功在 %s 端口开启！" % (port), style = "bold green")
     s.print("管理员账户：[ " + op + " ]", style = "bold blue")
     s.print("管理员密码：请查看 `config.txt` 内的密码。", style = "bold blue")
     if flag == 1:
-        s.print("是否打开官网（Y / N）：", end = "")
+        s.print("是否打开 GitHub 仓库（Y / N）：", end = "")
         tmpp = input()
         if tmpp == "y" or tmpp == "Y":
             os.system("start https://github.com/yuhaodi22222/OIChat")
+    else:
+        s.print("GitHub 仓库地址：https://github.com/yuhaodi22222/OIChat")
     while True:
         conn, addr = server.accept()
         c = Manager(conn,addr,"")
