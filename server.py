@@ -12,7 +12,7 @@ global hosttmp
 global porttmp
 fileidx = 1
 oppassword = 123456
-version = "2.0.5" # 版本号
+version = "2.0.6" # 版本号
 
 def resetdata(data):   # 防止使用 \r 冒充系统消息
     tmp = ""
