@@ -12,7 +12,7 @@ global hosttmp
 global porttmp
 fileidx = 1
 oppassword = 123456
-version = "2.0.6" # 版本号
+version = "2.1" # 版本号
 
 def resetdata(data):   # 防止使用 \r 冒充系统消息
     tmp = ""
@@ -165,7 +165,7 @@ class Manager:
                 elif data[0:1] == "/":
                     tmp = data[1:].split(" ")
                     if tmp[0] == "help":
-                        c.sendMsg("\n指令列表：\n\n1. /files\n\n2. /kick\n\n3. /ban\n\n4. /banip", "系统消息")
+                        c.sendMsg("\n指令列表：\n\n1. /files\n\n2. /kick\n\n3. /ban\n\n4. /banip\n\n5. /important", "系统消息")
                         continue
                     elif tmp[0] == "files":
                         cnt = len(tmp)
@@ -225,6 +225,26 @@ class Manager:
                         else:
                             c.sendMsg("参数过多", "系统消息")
                         continue
+                    elif (tmp[0] == "important"):
+                        cnt = len(tmp)
+                        if (cnt == 1):
+                            c.sendMsg("缺少参数，输入 /important ? 获取帮助。", "系统消息")
+                        elif (cnt == 2):
+                            if (tmp[1] == "?"):
+                                c.sendMsg("用法：/important <User> <Msg>", "系统消息")
+                            else:
+                                c.sendMsg("输入 /important ? 获取帮助。", "系统消息")
+                        elif (cnt == 3):
+                            User_Name = tmp[1]
+                            Send_Msg = tmp[2]
+                            try:
+                                User_Id = nameipdic[User_Name]
+                            except:
+                                c.sendMsg("没有 " + User_Name + " 用户", "系统消息")
+                            clients[iports[User_Name]].socket.send(("!!!important " + c.username + " " + Send_Msg).encode("utf-8"))
+                            c.sendMsg("你向 " + User_Name + " 发送了重要消息", "系统消息")
+                        else:
+                            c.sendMsg("参数过多", "系统消息")
                     elif clients[c.getId()].username != op:
                         c.sendMsg("你没有权限使用指令", "系统消息")
                         continue

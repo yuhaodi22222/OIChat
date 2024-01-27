@@ -3,18 +3,19 @@ import time
 import os
 from threading import Thread
 from PyQt5 import QtCore, QtGui, QtWidgets
+from winotify import Notification
 #from qt_material import apply_stylesheet
 import sys
 running = False
 opname = ""
 flag = True
-ip = "127.0.0.1"
-port = 10000
+ip = "127.0.0.1" # 默认连接 IP
+port = 10000  # 默认链接端口
 username = ""
 codemd = False
-version = "2.0.6"  # 版本号
+version = "2.1"  # 版本号
 
-class GUI(object):
+class GUI(object): # 主窗口
     def __init__(self, c, Form, version):
         self.version = version
         self.c = c
@@ -74,7 +75,7 @@ class GUI(object):
         self.pushButton_3.setText(_translate("Form", "发送文件"))
 
 
-class codewindow(object):
+class codewindow(object): # 发送代码窗口
     def __init__(self, c, Form, version):
         self.version = version
         self.Form = Form
@@ -295,6 +296,7 @@ class Chatter:
         c.send((username + " " + version).encode("utf-8"))
         showguit.start()
         time.sleep(1)
+        global flag
         ui.send("GitHub 仓库地址：https://github.com/yuhaodi22222/OIChat")
         while running:
             try:
@@ -309,6 +311,13 @@ class Chatter:
                         continue
                     if tmp[0] == "password":
                         ui.send("请在下方输入框输入密码")
+                        continue
+                    if tmp[0] == "important":
+                        From_User = tmp[1]
+                        messages = tmp[2]
+                        ui.send("用户 " + From_User + " 发送了重要消息：" + messages)
+                        toast = Notification(app_id="Windows 通知中心",title="更新", msg="需要重启以进行更新")
+                        toast.show()
                         continue
                     if tmp[0] == "file":
                         filename = tmp[1]
