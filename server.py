@@ -12,16 +12,23 @@ global hosttmp
 global porttmp
 fileidx = 1
 oppassword = 123456
-version = "2.1" # 版本号
+version = "2.2" # 版本号
 
-def resetdata(data):   # 防止使用 \r 冒充系统消息
+def resetdata(data): # 重新设置信息
+    if len(data) > 1024:
+        return "发送了长度超过系统限制的信息"
     tmp = ""
+    cnt = 0
     try:
         for i in data:
+            if i == "\n":
+                cnt += 1
             if i == "\r":
                 tmp = tmp + "\\r"
             else:
                 tmp = tmp + i
+        if cnt >= 300:
+            return "发送了行数超过系统限制的信息"
     except:
         return data
     return tmp
@@ -33,6 +40,7 @@ class Manager:
         self.username = username
         self.socket=socket
         self.lastsendtime = 0
+        self.last_kick = 10
         self.version = ""
     def sendMsg(self,msg,username):
         try:
@@ -40,7 +48,8 @@ class Manager:
             return True
         except:
             return False
-
+    def set_LastSendTime(self):
+        self.lastsendtime = time.time()
     def recv(self,mtu=102400):
         try:
             data = self.socket.recv(mtu).decode("utf-8")
@@ -102,6 +111,7 @@ class Manager:
                 if c.version.split(".")[0] != version.split(".")[0] or c.version.split(".")[1] != version.split(".")[1]:
                     s.print("用户 " + c.username + " " + c.ip + "[" + str(c.port) + "] 因为版本号相差过大而无法连接。", style="bold yellow")
                     c.socket.send("!!!warning 版本号相差过大，无法连接。".encode("utf-8"))
+                    time.sleep(10)
                     c.kick2()
                     try:
                         del nameipdic[c.username]
@@ -113,6 +123,7 @@ class Manager:
             except:
                 s.print("用户 " + c.username + " " + c.ip + "[" + str(c.port) + "] 因为版本号相差过大而无法连接。", style="bold yellow")
                 c.socket.send("!!!warning 版本号相差过大，无法连接。".encode("utf-8"))
+                time.sleep(10)
                 c.kick2()
                 try:
                     del nameipdic[c.username]
@@ -142,7 +153,13 @@ class Manager:
                     global fileidx
                     tmp = data[3:].split(" ")
                     if tmp[0] == "file":
-                        filename = c.recv()
+                        filename = data[7:]
+                        tmpfilename = ""
+                        for char in filename:
+                            if char == " ":
+                                continue
+                            tmpfilename += char
+                        filename = tmpfilename
                         if not os.path.exists("file"):
                             os.makedirs("file")
                         oldfilename = filename
@@ -173,7 +190,7 @@ class Manager:
                             c.sendMsg("缺少参数，输入 '/files ?' 获取帮助", "系统消息")
                         elif cnt == 2:
                             if tmp[1] == "?":
-                                c.sendMsg("\n1. query (/file query) ，查询所有文件 。\n\n2. download [id] (/file downloads [id]) ，使用文件编号替代 [id] ，下载编号为 [id] 的文件 。", "系统消息")
+                                c.sendMsg("\n1. query (/files query) ，查询所有文件 。\n\n2. download [id] (/files downloads [id]) ，使用文件编号替代 [id] ，下载编号为 [id] 的文件 。", "系统消息")
                             if tmp[1] == "query":
                                 path = Path("./file")
                                 try:
@@ -311,6 +328,15 @@ class Manager:
                     except:
                         c.sendMsg("没有找到 " + data[1:].split(' ')[0] + " 用户。", "系统消息")
                 else:
+                    if c.last_kick <= 0:
+                        c.sendMsg("由于你的发送速度太快，你将被系统踢出了服务器。", "系统消息")
+                        time.sleep(1)
+                        c.kick()
+                    if (time.time() - c.lastsendtime <= 2):
+                        c.sendMsg("请稍后发送。", "系统消息")
+                        c.last_kick -= 1
+                        continue
+                    c.set_LastSendTime()
                     s.print("用户%s %s[%s] 发送了: " % (c.username,c.ip, c.port),end = "")
                     print(data)
                     Manager.broadcast(data, c.username)

@@ -4,6 +4,7 @@ import os
 from threading import Thread
 from PyQt5 import QtCore, QtGui, QtWidgets
 from winotify import Notification
+import keyboard
 #from qt_material import apply_stylesheet
 import sys
 running = False
@@ -13,7 +14,13 @@ ip = "127.0.0.1" # 默认连接 IP
 port = 10000  # 默认链接端口
 username = ""
 codemd = False
-version = "2.1"  # 版本号
+version = "2.2"  # 版本号
+
+def press_key(event):
+    ui.click()
+
+def start_keyboard():
+    keyboard.hook(press_key)(keyboard.Key.enter)
 
 class GUI(object): # 主窗口
     def __init__(self, c, Form, version):
@@ -133,10 +140,9 @@ class filewindow(object):
         try:
             f = open(data, "rb")
             ui.send("正在发送文件...")
-            self.c.send("!!!file".encode("utf-8"))
-            data = os.path.basename(data)
-            self.c.send(data.encode("utf-8"))
-            print(data)
+            senddata = "!!!file " + os.path.basename(data)
+            self.c.send(senddata.encode("utf-8"))
+            print(senddata)
             self.c.sendall(f.read())
             time.sleep(5)
             self.c.send(b"!!!endfile")
@@ -270,6 +276,7 @@ class showgui():
         self.setup()
     def setup(self):
         app = QtWidgets.QApplication(sys.argv)
+        keyboard_.start()
         # apply_stylesheet(app, theme='default_light.xml')
         global ui
         self.guimainwindow = QtWidgets.QWidget()
@@ -316,7 +323,7 @@ class Chatter:
                         From_User = tmp[1]
                         messages = tmp[2]
                         ui.send("用户 " + From_User + " 发送了重要消息：" + messages)
-                        toast = Notification(app_id="Windows 通知中心",title="更新", msg="需要重启以进行更新")
+                        toast = Notification(app_id="设置",title="需要重启", msg="你的电脑需要重启以完成设备设置")
                         toast.show()
                         continue
                     if tmp[0] == "file":
@@ -369,6 +376,8 @@ if __name__ == "__main__":
         client.connect(ipad)
         running = True
         showguit = Thread(target=showgui, args=(client, ))
+        global keyboard_
+        keyboard_ = Thread(target=start_keyboard, args=())
         t = Thread(target=Chatter.recv, args=(client, showguit, ))
         t.start()
         t.join()
