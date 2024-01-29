@@ -17,10 +17,11 @@ codemd = False
 version = "2.2"  # 版本号
 
 def press_key(event):
-    ui.click()
+    if event.name == "enter":
+        ui.click()
 
 def start_keyboard():
-    keyboard.hook(press_key)(keyboard.Key.enter)
+    keyboard.hook(press_key)
 
 class GUI(object): # 主窗口
     def __init__(self, c, Form, version):
