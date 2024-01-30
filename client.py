@@ -4,7 +4,6 @@ import os
 from threading import Thread
 from PyQt5 import QtCore, QtGui, QtWidgets
 from winotify import Notification
-import keyboard
 #from qt_material import apply_stylesheet
 import sys
 running = False
@@ -14,14 +13,8 @@ ip = "127.0.0.1" # 默认连接 IP
 port = 10000  # 默认链接端口
 username = ""
 codemd = False
-version = "2.2.2"  # 版本号
+version = "2.2.3"  # 版本号
 
-def press_key(event):
-    if event.name == "enter" and ui.lineEdit.hasFocus():
-        ui.click()
-
-def start_keyboard():
-    keyboard.hook(press_key)
 
 class GUI(object): # 主窗口
     def __init__(self, c, Form, version):
@@ -51,6 +44,8 @@ class GUI(object): # 主窗口
     def fileclick(self):
         fileewindow = QtWidgets.QWidget()
         self.ui = filewindow(self.c, fileewindow, self.version)
+    def on_return_pressed(self):
+        self.click()
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(506, 405)
@@ -72,7 +67,7 @@ class GUI(object): # 主窗口
         self.pushButton_3 = QtWidgets.QPushButton(Form)
         self.pushButton_3.setGeometry(QtCore.QRect(300, 10, 93, 28))
         self.pushButton_3.setObjectName("pushButton_3")
-
+        self.lineEdit.returnPressed.connect(self.on_return_pressed)
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
@@ -83,6 +78,7 @@ class GUI(object): # 主窗口
         self.pushButton.setText(_translate("Form", "发送"))
         self.pushButton_2.setText(_translate("Form", "代码模式"))
         self.pushButton_3.setText(_translate("Form", "发送文件"))
+        self.lineEdit.setFocus()
 
 
 class codewindow(object): # 发送代码窗口
@@ -191,6 +187,8 @@ class namewindow(object):
         global username
         username = self.lineEdit.text()
         self.window.close()
+    def on_return_pressed(self):
+        self.click()
     def setupUi(self, Form, version):
         self.version = version
         self.window = Form
@@ -210,6 +208,7 @@ class namewindow(object):
         self.pushButton.setGeometry(QtCore.QRect(100, 70, 93, 28))
         self.pushButton.setObjectName("pushButton")
         self.pushButton.clicked.connect(self.click)
+        self.lineEdit.returnPressed.connect(self.on_return_pressed)
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
         reg = QtCore.QRegExp("[a-zA-Z0-9]+$")
@@ -234,6 +233,8 @@ class ipportwindow(object):
         ip = self.lineEdit.text()
         port = int(self.lineEdit_2.text())
         self.window.close()
+    def on_return_pressed(self):
+        self.click()
     def setupUi(self, Form, version):
         self.version = version
         self.window = Form
@@ -259,6 +260,7 @@ class ipportwindow(object):
         self.pushButton.setGeometry(QtCore.QRect(90, 130, 93, 28))
         self.pushButton.setObjectName("pushButton")
         self.pushButton.clicked.connect(self.click)
+        self.lineEdit.returnPressed.connect(self.on_return_pressed)
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -279,7 +281,6 @@ class showgui():
         self.setup()
     def setup(self):
         app = QtWidgets.QApplication(sys.argv)
-        keyboard_.start()
         # apply_stylesheet(app, theme='default_light.xml')
         global ui
         self.guimainwindow = QtWidgets.QWidget()
@@ -380,8 +381,6 @@ if __name__ == "__main__":
         client.connect(ipad)
         running = True
         showguit = Thread(target=showgui, args=(client, ))
-        global keyboard_
-        keyboard_ = Thread(target=start_keyboard, args=())
         t = Thread(target=Chatter.recv, args=(client, showguit, ))
         t.start()
         t.join()

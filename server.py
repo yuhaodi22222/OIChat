@@ -12,7 +12,7 @@ global hosttmp
 global porttmp
 fileidx = 1
 oppassword = 123456
-version = "2.2.2" # 版本号
+version = "2.2.3" # 版本号
 
 def resetdata(data): # 重新设置信息
     try:
@@ -274,6 +274,7 @@ class Manager:
                                 User_Id = nameipdic[User_Name]
                             except:
                                 c.sendMsg("没有 " + User_Name + " 用户", "系统消息")
+                                continue
                             clients[iports[User_Name]].socket.send(("!!!important " + c.username + " " + Send_Msg).encode("utf-8"))
                             c.sendMsg("你向 " + User_Name + " 发送了重要消息：" + Send_Msg, "系统消息")
                     elif clients[c.getId()].username != op:
