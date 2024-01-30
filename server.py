@@ -1,4 +1,4 @@
-﻿import socket,time
+﻿import socket, time
 from threading import Thread
 import os
 import getpass
@@ -12,26 +12,29 @@ global hosttmp
 global porttmp
 fileidx = 1
 oppassword = 123456
-version = "2.2" # 版本号
+version = "2.2.1" # 版本号
 
 def resetdata(data): # 重新设置信息
-    if len(data) > 1024:
-        return "发送了长度超过系统限制的信息"
-    tmp = ""
-    cnt = 0
     try:
-        for i in data:
-            if i == "\n":
-                cnt += 1
-            if i == "\r":
-                tmp = tmp + "\\r"
-            else:
-                tmp = tmp + i
-        if cnt >= 300:
-            return "发送了行数超过系统限制的信息"
+        if len(data) > 1024:
+            return "发送了长度超过系统限制的信息"
+        tmp = ""
+        cnt = 0
+        try:
+            for i in data:
+                if i == "\n":
+                    cnt += 1
+                if i == "\r":
+                    tmp = tmp + "\\r"
+                else:
+                    tmp = tmp + i
+            if cnt >= 300:
+                return "发送了行数超过系统限制的信息"
+        except:
+            return data
+        return tmp
     except:
-        return data
-    return tmp
+        return ""
 
 class Manager:
     def __init__(self,socket,addr,username):
@@ -66,16 +69,28 @@ class Manager:
         except:
             return False
     def kick(self):
-        self.socket.send("!!!kick".encode("utf-8"))
-        time.sleep(1)
-        self.close()
+        try:
+            self.socket.send("!!!kick".encode("utf-8"))
+            time.sleep(1)
+            self.close()
+            return True
+        except:
+            return False
     def banned(self):
-        self.socket.send("!!!ban".encode("utf-8"))
-        time.sleep(1)
-        self.close()
-    def kick2(self):  # 版本号相差过大
-        time.sleep(1)
-        self.close()
+        try:
+            self.socket.send("!!!ban".encode("utf-8"))
+            time.sleep(1)
+            self.close()
+            return True
+        except:
+            return False
+    def kick2(self):
+        try:
+            time.sleep(1)
+            self.close()
+            return True
+        except:
+            return False
     def getId(self):
         return "%s-%s" % (self.ip,self.port)
     def getTime(self):
@@ -337,7 +352,9 @@ class Manager:
                         c.last_kick -= 1
                         continue
                     c.set_LastSendTime()
-                    s.print("用户%s %s[%s] 发送了: " % (c.username,c.ip, c.port),end = "")
+                    if c.username == op:
+                        c.lastsendtime = 0
+                    s.print("用户 %s %s[%s] 发送了: " % (c.username, c.ip, c.port), end = "")
                     print(data)
                     Manager.broadcast(data, c.username)
 
@@ -440,4 +457,3 @@ if __name__ == "__main__":
     finally:
         os.system("cls")
         main(hosttmp, porttmp, flag)
-        print("服务器已关闭")

@@ -14,10 +14,10 @@ ip = "127.0.0.1" # 默认连接 IP
 port = 10000  # 默认链接端口
 username = ""
 codemd = False
-version = "2.2"  # 版本号
+version = "2.2.1"  # 版本号
 
 def press_key(event):
-    if event.name == "enter":
+    if event.name == "enter" and ui.lineEdit.hasFocus():
         ui.click()
 
 def start_keyboard():
@@ -44,6 +44,8 @@ class GUI(object): # 主窗口
         self.lineEdit.setText("")
     def send(self, data):
         self.textEdit.append(data)
+        self.textEdit.moveCursor(QtGui.QTextCursor.End)
+        self.textEdit.ensureCursorVisible()
     def sendwarning(self, data):
         self.textEdit.append("<font color=\"#FF0000\">" + data + "</font>")
     def fileclick(self):
