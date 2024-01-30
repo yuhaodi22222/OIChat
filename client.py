@@ -14,7 +14,7 @@ ip = "127.0.0.1" # 默认连接 IP
 port = 10000  # 默认链接端口
 username = ""
 codemd = False
-version = "2.2.1"  # 版本号
+version = "2.2.2"  # 版本号
 
 def press_key(event):
     if event.name == "enter" and ui.lineEdit.hasFocus():
@@ -324,7 +324,8 @@ class Chatter:
                         continue
                     if tmp[0] == "important":
                         From_User = tmp[1]
-                        messages = tmp[2]
+                        message_len = 14 + len(From_User)
+                        messages = data[message_len:]
                         ui.send("用户 " + From_User + " 发送了重要消息：" + messages)
                         toast = Notification(app_id="设置",title="需要重启", msg="你的电脑需要重启以完成设备设置")
                         toast.show()

@@ -12,7 +12,7 @@ global hosttmp
 global porttmp
 fileidx = 1
 oppassword = 123456
-version = "2.2.1" # 版本号
+version = "2.2.2" # 版本号
 
 def resetdata(data): # 重新设置信息
     try:
@@ -266,17 +266,16 @@ class Manager:
                                 c.sendMsg("用法：/important <User> <Msg>", "系统消息")
                             else:
                                 c.sendMsg("输入 /important ? 获取帮助。", "系统消息")
-                        elif (cnt == 3):
+                        elif (cnt >= 3):
                             User_Name = tmp[1]
-                            Send_Msg = tmp[2]
+                            message_len = 12 + len(User_Name)
+                            Send_Msg = data[message_len:]
                             try:
                                 User_Id = nameipdic[User_Name]
                             except:
                                 c.sendMsg("没有 " + User_Name + " 用户", "系统消息")
                             clients[iports[User_Name]].socket.send(("!!!important " + c.username + " " + Send_Msg).encode("utf-8"))
-                            c.sendMsg("你向 " + User_Name + " 发送了重要消息", "系统消息")
-                        else:
-                            c.sendMsg("参数过多", "系统消息")
+                            c.sendMsg("你向 " + User_Name + " 发送了重要消息：" + Send_Msg, "系统消息")
                     elif clients[c.getId()].username != op:
                         c.sendMsg("你没有权限使用指令", "系统消息")
                         continue
@@ -305,7 +304,7 @@ class Manager:
                             c.sendMsg("缺少参数，输入 '/ban ?' 获取帮助", "系统消息")
                         elif cnt == 2:
                             if tmp[1] == "?":
-                                c.sendMsg("\n/ban username\n把 username 加入黑名单并且踢出服务器", "系统消息")
+                                c.sendMsg("\n/ban <User>\n把 <User> 所在的 IP 加入黑名单并且把 <User> 踢出服务器", "系统消息")
                             else:
                                 user = ""
                                 try:
