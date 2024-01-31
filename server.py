@@ -2,22 +2,22 @@
 What's new?
 
 Chinese:
-1. 关闭版本校验功能
-2. 获取本机 IP 并打印
-3. 修复报错问题
+1. 新增打印当前在线用户功能
+2. 为了维护 OIChat 初衷，关闭消息长度限制
 
 English:
-1. Turn off version verification function
-2. Obtain the local IP and print it
-3. Fix server error issues
+1. Add the function of printing current online users
+2. To maintain the original intention of OIChat, the message length limit is disabled
 """
+
+#@formatter:on
+
 import socket, time
 from threading import Thread
 import os
 import getpass
 from rich.console import Console
 from pathlib import Path
-import time
 global op
 nameipdic = {}
 ipnamedic = {}
@@ -25,7 +25,7 @@ global hosttmp
 global porttmp
 fileidx = 1
 oppassword = 123456
-version = "2.2.4" # 版本号
+version = "2.2.5"  # 版本号
 version_Verification = True
 
 def getIp():
@@ -38,20 +38,13 @@ def getIp():
 
 def reset_Data(data): # 重新设置信息
     try:
-        if len(data) > 1024:
-            return "发送了长度超过系统限制的信息"
         tmp = ""
-        cnt = 0
         try:
             for i in data:
-                if i == "\n":
-                    cnt += 1
                 if i == "\r":
                     tmp = tmp + "\\r"
                 else:
                     tmp = tmp + i
-            if cnt >= 300:
-                return "发送了行数超过系统限制的信息"
         except:
             return data
         return tmp
@@ -119,7 +112,7 @@ class Manager:
         return str(time.strftime("%Y-%m-%d %H:%M:%S"))
 
     def new_client(c):
-        try:
+        if True:
             try:
                 print("%s[%s] 尝试连接" %(c.ip,c.port))
                 data = c.recv()
@@ -222,7 +215,7 @@ class Manager:
                     elif data[0:1] == "/":
                         tmp = data[1:].split(" ")
                         if tmp[0] == "help":
-                            c.sendMsg("\n指令列表：\n\n1. /files\n\n2. /kick\n\n3. /ban\n\n4. /banip\n\n5. /important", "系统消息")
+                            c.sendMsg("\n指令列表：\n\n1. /files\n\n2. /kick\n\n3. /ban\n\n4. /banip\n\n5. /important\n\n6. /print-users", "系统消息")
                             continue
                         elif tmp[0] == "files":
                             cnt = len(tmp)
@@ -302,6 +295,15 @@ class Manager:
                                     continue
                                 clients[iports[User_Name]].socket.send(("!!!important " + c.username + " " + Send_Msg).encode("utf-8"))
                                 c.sendMsg("你向 " + User_Name + " 发送了重要消息：" + Send_Msg, "系统消息")
+                        elif (tmp[0] == "print-users"):
+                            if (len(tmp) > 1):
+                                c.sendMsg("参数过多。", "系统消息")
+                                continue
+                            send_Data = "\n当前在线用户：\n"
+                            for Users in clients:
+                                Users = clients[Users]
+                                send_Data += Users.username + " " + Users.ip + "[" + str(Users.port) + "]\n"
+                            c.sendMsg(send_Data, "系统消息")
                         elif clients[c.getId()].username != op:
                             c.sendMsg("你没有权限使用指令", "系统消息")
                             continue
@@ -361,7 +363,7 @@ class Manager:
                             else:
                                 c.sendMsg("参数过多", "系统消息")
                         continue
-                    elif data[0:1] == "@":
+                    elif data[0] == "@":
                         try:
                             c.sendMsg(data,c.username)
                             clients[iports[data[1:].split(' ')[0]]].sendMsg(data,c.username)
@@ -398,8 +400,8 @@ class Manager:
                 usercnt = len(nameipdic)
                 Manager.broadcast("用户 " + c.username + " 离开了聊天室，当前在线 " + str(usercnt) + " 人。", "系统消息")
                 c.close()
-        except:
-            pass
+        # except:
+            # pass
 
     def broadcast(msg,username):
         for c in clients.values():

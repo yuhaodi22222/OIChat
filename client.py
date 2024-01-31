@@ -2,46 +2,50 @@
 What's new?
 
 Chinese:
-1. 管理员输密码时显示圆点
+1. 新的 StyleSheet
+2. 断开连接后重新连接的功能
 
 English:
-1. Display dots when administrator enters password
+1. New StyleSheet.
+2. The function of reconnecting after disconnecting
 """
+
+#@formatter:on
+
 import socket
+import qdarkstyle
 import time
 import os
 from threading import Thread
 from PyQt5 import QtCore, QtGui, QtWidgets
 from winotify import Notification
-#from qt_material import apply_stylesheet
 import sys
 running = False
 flag = True
-ip = "127.0.0.1" # 默认连接 IP
+ip = "127.0.0.1"  # 默认连接 IP
 port = 10000  # 默认连接端口
 username = ""
-version = "2.2.4"  # 版本号
+version = "2.2.5"  # 版本号
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-
-class GUI(object): # 主窗口
-    def __init__(self, c, Form, version):
+class GUI(object):   # 主窗口
+    def __init__(self, Form, version):
         self.version = version
-        self.c = c
         self.Form = Form
         self.setupUi(Form)
         self.textEdit.setReadOnly(True)
         self.pushButton.clicked.connect(self.click)
-        self.pushButton_2.clicked.connect(self.codeclick)
+        self.pushButton_2.clicked.connect(self.code_Click)
         self.pushButton_3.clicked.connect(self.fileclick)
-        Form.setWindowIcon(QtGui.QIcon("./client.ico"))
+        Form.setWindowIcon(QtGui.QIcon("./client_socket.ico"))
         self.textEdit.setFontFamily("Consolas")
-    def codeclick(self):
+    def code_Click(self):
         codeewindow = QtWidgets.QWidget()
-        self.ui = codewindow(self.c, codeewindow, self.version)
+        self.ui = codewindow(codeewindow, self.version)
     def click(self):
         self.depassword_Mode()
         data = self.lineEdit.text()
-        self.c.send(data.encode("utf-8"))
+        client_socket.send(data.encode("utf-8"))
         self.lineEdit.setText("")
     def password_Mode(self):
         self.lineEdit.setEchoMode(QtWidgets.QLineEdit.Password)
@@ -53,7 +57,7 @@ class GUI(object): # 主窗口
         self.textEdit.ensureCursorVisible()
     def fileclick(self):
         fileewindow = QtWidgets.QWidget()
-        self.ui = filewindow(self.c, fileewindow, self.version)
+        self.ui = filewindow(fileewindow, self.version)
     def on_return_pressed(self):
         self.click()
     def setupUi(self, Form):
@@ -92,19 +96,18 @@ class GUI(object): # 主窗口
 
 
 class codewindow(object): # 发送代码窗口
-    def __init__(self, c, Form, version):
+    def __init__(self, Form, version):
         self.version = version
         self.Form = Form
-        self.c = c
         super().__init__()
         self.setupUi(Form)
         self.pushButton.clicked.connect(self.click)
-        Form.setWindowIcon(QtGui.QIcon("./client.ico"))
+        Form.setWindowIcon(QtGui.QIcon("./client_socket.ico"))
         self.Form.show()
     def click(self):
         data = self.TextEdit.toPlainText()
         data = "发送了代码：" + "\n" + data + "\n"
-        self.c.send(data.encode("utf-8"))
+        client_socket.send(data.encode("utf-8"))
         self.TextEdit.setText("")
     def setupUi(self, Form):
         Form.setObjectName("Form")
@@ -129,14 +132,13 @@ class codewindow(object): # 发送代码窗口
         self.pushButton.setText(_translate("Form", "发送"))
 
 class filewindow(object):
-    def __init__(self, c, Form, version):
+    def __init__(self,  Form, version):
         self.version = version
-        self.c = c
         self.Form = Form
         self.setupUi(Form)
         self.pushButton.clicked.connect(self.get_path)
         self.pushButton_2.clicked.connect(self.click)
-        Form.setWindowIcon(QtGui.QIcon("./client.ico"))
+        Form.setWindowIcon(QtGui.QIcon("./client_socket.ico"))
         self.Form.show()
     def get_path(self):
         filename, filetype = QtWidgets.QFileDialog.getOpenFileName(None, "请选择文件路径", "", "All files (*.*)")
@@ -150,11 +152,11 @@ class filewindow(object):
             f = open(data, "rb")
             ui.send("正在发送文件...")
             senddata = "!!!file " + os.path.basename(data)
-            self.c.send(senddata.encode("utf-8"))
+            client_socket.send(senddata.encode("utf-8"))
             print(senddata)
-            self.c.sendall(f.read())
+            client_socket.sendall(f.read())
             time.sleep(5)
-            self.c.send(b"!!!endfile")
+            client_socket.send(b"!!!endfile")
             f.close()
         except:
             ui.send("发送文件失败！")
@@ -168,10 +170,10 @@ class filewindow(object):
         self.label.setGeometry(QtCore.QRect(10, 10, 81, 21))
         self.label.setObjectName("label")
         self.lineEdit = QtWidgets.QLineEdit(Form)
-        self.lineEdit.setGeometry(QtCore.QRect(80, 50, 271, 31))
+        self.lineEdit.setGeometry(QtCore.QRect(80, 50, 281, 31))
         self.lineEdit.setObjectName("lineEdit")
         self.label_2 = QtWidgets.QLabel(Form)
-        self.label_2.setGeometry(QtCore.QRect(10, 50, 81, 31))
+        self.label_2.setGeometry(QtCore.QRect(10, 50, 69, 31))
         self.label_2.setObjectName("label_2")
         self.pushButton = QtWidgets.QPushButton(Form)
         self.pushButton.setGeometry(QtCore.QRect(370, 50, 93, 31))
@@ -187,7 +189,7 @@ class filewindow(object):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "OIChat " + self.version))
         self.label.setText(_translate("Form", "<html><head/><body><p><span style=\" font-size:14pt;\">OIChat</span></p></body></html>"))
-        self.label_2.setText(_translate("Form", "<html><head/><body><p><span style=\" font-size:14pt;\">路径：</span></p></body></html>"))
+        self.label_2.setText(_translate("Form", "<html><head/><body><p><span style=\" font-size:14pt;\">路径:</span></p></body></html>"))
         self.pushButton.setText(_translate("Form", "选择"))
         self.pushButton_2.setText(_translate("Form", "发送"))
 
@@ -204,7 +206,7 @@ class namewindow(object):
         self.window = Form
         Form.setObjectName("Form")
         Form.resize(295, 116)
-        Form.setWindowIcon(QtGui.QIcon("./client.ico"))
+        Form.setWindowIcon(QtGui.QIcon("./client_socket.ico"))
         self.label = QtWidgets.QLabel(Form)
         self.label.setGeometry(QtCore.QRect(10, 0, 161, 21))
         self.label.setObjectName("label")
@@ -212,7 +214,7 @@ class namewindow(object):
         self.lineEdit.setGeometry(QtCore.QRect(122, 40, 151, 21))
         self.lineEdit.setObjectName("lineEdit")
         self.label_2 = QtWidgets.QLabel(Form)
-        self.label_2.setGeometry(QtCore.QRect(10, 40, 171, 21))
+        self.label_2.setGeometry(QtCore.QRect(10, 40, 100, 21))
         self.label_2.setObjectName("label_2")
         self.pushButton = QtWidgets.QPushButton(Form)
         self.pushButton.setGeometry(QtCore.QRect(100, 70, 93, 28))
@@ -231,7 +233,7 @@ class namewindow(object):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "OIChat " + self.version))
         self.label.setText(_translate("Form", "<html><head/><body><p><span style=\" font-size:14pt;\">OIChat</span></p></body></html>"))
-        self.lineEdit.setToolTip(_translate("Form", "<html><head/><body><p>输入服务器 IP</p></body></html>"))
+        self.lineEdit.setToolTip(_translate("Form", "<html><head/><body><p>用户名</p></body></html>"))
         self.label_2.setText(_translate("Form", "<html><head/><body><p><span style=\" font-size:11pt;\">输入用户名：</span></p></body></html>"))
         self.pushButton.setText(_translate("Form", "确定"))
 
@@ -250,7 +252,7 @@ class ipportwindow(object):
         self.window = Form
         Form.setObjectName("Form")
         Form.resize(295, 185)
-        Form.setWindowIcon(QtGui.QIcon("./client.ico"))
+        Form.setWindowIcon(QtGui.QIcon("./client_socket.ico"))
         self.label = QtWidgets.QLabel(Form)
         self.label.setGeometry(QtCore.QRect(10, 0, 161, 21))
         self.label.setObjectName("label")
@@ -258,7 +260,7 @@ class ipportwindow(object):
         self.lineEdit.setGeometry(QtCore.QRect(160, 60, 113, 21))
         self.lineEdit.setObjectName("lineEdit")
         self.label_2 = QtWidgets.QLabel(Form)
-        self.label_2.setGeometry(QtCore.QRect(10, 60, 171, 21))
+        self.label_2.setGeometry(QtCore.QRect(10, 60, 150, 21))
         self.label_2.setObjectName("label_2")
         self.label_3 = QtWidgets.QLabel(Form)
         self.label_3.setGeometry(QtCore.QRect(10, 100, 171, 21))
@@ -267,7 +269,7 @@ class ipportwindow(object):
         self.lineEdit_2.setGeometry(QtCore.QRect(160, 100, 113, 21))
         self.lineEdit_2.setObjectName("lineEdit_2")
         self.pushButton = QtWidgets.QPushButton(Form)
-        self.pushButton.setGeometry(QtCore.QRect(90, 130, 93, 28))
+        self.pushButton.setGeometry(QtCore.QRect(90, 135, 93, 28))
         self.pushButton.setObjectName("pushButton")
         self.pushButton.clicked.connect(self.click)
         self.lineEdit.returnPressed.connect(self.on_return_pressed)
@@ -279,32 +281,32 @@ class ipportwindow(object):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "OIChat " + self.version))
         self.label.setText(_translate("Form", "<html><head/><body><p><span style=\" font-size:14pt;\">OIChat</span></p></body></html>"))
-        self.lineEdit.setToolTip(_translate("Form", "<html><head/><body><p>输入服务器 IP</p></body></html>"))
+        self.lineEdit.setToolTip(_translate("Form", "<html><head/><body><p>服务器 IP</p></body></html>"))
         self.label_2.setText(_translate("Form", "<html><head/><body><p><span style=\" font-size:11pt;\">输入服务器 IP :</span></p></body></html>"))
         self.label_3.setText(_translate("Form", "<html><head/><body><p><span style=\" font-size:11pt;\">输入服务器端口:</span></p></body></html>"))
-        self.lineEdit_2.setToolTip(_translate("Form", "<html><head/><body><p>输入服务器 IP</p></body></html>"))
+        self.lineEdit_2.setToolTip(_translate("Form", "<html><head/><body><p>服务器端口</p></body></html>"))
         self.pushButton.setText(_translate("Form", "确定"))
 
 class showgui():
-    def __init__(self, c):
-        self.c = c
+    def __init__(self):
         self.setup()
     def setup(self):
         app = QtWidgets.QApplication(sys.argv)
-        # apply_stylesheet(app, theme='default_light.xml')
+        app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
         global ui
         self.guimainwindow = QtWidgets.QWidget()
-        ui = GUI(self.c, self.guimainwindow, version)
+        ui = GUI(self.guimainwindow, version)
         self.guimainwindow.show()
         app.exec_()
         del app
-        self.c.close()
+        client_socket.close()
     
 class Chatter:
-    def recv(c, showguit):
+    def recv(showguit):
+        global client_socket
         while True:
             app = QtWidgets.QApplication(sys.argv)
-            # apply_stylesheet(app, theme='default_light.xml')
+            app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
             widget = QtWidgets.QWidget()
             name = namewindow()
             name.setupUi(widget, version)
@@ -314,14 +316,14 @@ class Chatter:
             if len(username) < 4:
                 continue
             break
-        c.send((username + " " + version).encode("utf-8"))
+        client_socket.send((username + " " + version).encode("utf-8"))
         showguit.start()
         time.sleep(1)
         global flag
         ui.send("GitHub 仓库地址：https://github.com/yuhaodi22222/OIChat")
         while running:
             try:
-                data = c.recv(102400).decode("utf-8")
+                data = client_socket.recv(102400).decode("utf-8")
                 if not data:
                     break
                 if data[0:3] == "!!!":
@@ -352,7 +354,7 @@ class Chatter:
                             fileaddr = os.path.join("download", filename)
                             filesss = open(fileaddr, "wb")
                             while True:
-                                filesssdata = c.recv(100)
+                                filesssdata = client_socket.recv(100)
                                 #print(filesssdata)
                                 if filesssdata == b"!!!endfile":
                                     break
@@ -364,21 +366,31 @@ class Chatter:
                     if le == 1:
                         if tmp[0] == "kick":
                             ui.send("你被管理员踢出了服务器")
-                            c.send("被管理员踢出了服务器！".encode("utf-8"))
+                            client_socket.send("被管理员踢出了服务器！".encode("utf-8"))
                             flag = False
                             continue
                         if tmp[0] == "ban":
                             ui.send("你被管理员封禁了")
-                            c.send("被管理员封禁！".encode("utf-8"))
+                            client_socket.send("被管理员封禁！".encode("utf-8"))
                             flag = False
                             continue
                 ui.send(data)
                 print(data)
             except:
-                break
+                while True:
+                    ui.send("Connection lost. Reconnecting...")
+                    try:
+                        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        client_socket.connect((ip, port))
+                        client_socket.send((username + " " + version).encode("utf-8"))
+                        ui.send("成功连接！")
+                        break
+                    except:
+                        time.sleep(3)
+
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    # apply_stylesheet(app, theme='default_light.xml')
+    app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
     widget = QtWidgets.QWidget()
     ipport = ipportwindow()
     ipport.setupUi(widget, version)
@@ -387,12 +399,11 @@ if __name__ == "__main__":
     del app
     ipad = (ip, port)
     addrs = socket.getaddrinfo(socket.gethostname(), None)
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        client.connect(ipad)
+        client_socket.connect(ipad)
         running = True
-        showguit = Thread(target=showgui, args=(client, ))
-        t = Thread(target=Chatter.recv, args=(client, showguit, ))
+        showguit = Thread(target=showgui, args=())
+        t = Thread(target=Chatter.recv, args=(showguit, ))
         t.start()
         t.join()
         showguit.join()
@@ -400,5 +411,5 @@ if __name__ == "__main__":
         pass
     finally:
         print("连接已被关闭")
-        client.close()
+        client_socket.close()
         exit()
