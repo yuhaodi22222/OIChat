@@ -1,4 +1,13 @@
-﻿import socket
+﻿"""
+What's new?
+
+Chinese:
+1. 管理员输密码时显示圆点
+
+English:
+1. Display dots when administrator enters password
+"""
+import socket
 import time
 import os
 from threading import Thread
@@ -7,13 +16,11 @@ from winotify import Notification
 #from qt_material import apply_stylesheet
 import sys
 running = False
-opname = ""
 flag = True
 ip = "127.0.0.1" # 默认连接 IP
-port = 10000  # 默认链接端口
+port = 10000  # 默认连接端口
 username = ""
-codemd = False
-version = "2.2.3"  # 版本号
+version = "2.2.4"  # 版本号
 
 
 class GUI(object): # 主窗口
@@ -32,15 +39,18 @@ class GUI(object): # 主窗口
         codeewindow = QtWidgets.QWidget()
         self.ui = codewindow(self.c, codeewindow, self.version)
     def click(self):
+        self.depassword_Mode()
         data = self.lineEdit.text()
         self.c.send(data.encode("utf-8"))
         self.lineEdit.setText("")
+    def password_Mode(self):
+        self.lineEdit.setEchoMode(QtWidgets.QLineEdit.Password)
+    def depassword_Mode(self):
+        self.lineEdit.setEchoMode(QtWidgets.QLineEdit.Normal)
     def send(self, data):
         self.textEdit.append(data)
         self.textEdit.moveCursor(QtGui.QTextCursor.End)
         self.textEdit.ensureCursorVisible()
-    def sendwarning(self, data):
-        self.textEdit.append("<font color=\"#FF0000\">" + data + "</font>")
     def fileclick(self):
         fileewindow = QtWidgets.QWidget()
         self.ui = filewindow(self.c, fileewindow, self.version)
@@ -318,10 +328,11 @@ class Chatter:
                     tmp = data[3:].split(" ")
                     le = len(tmp)
                     if tmp[0] == "warning":
-                        ui.sendwarning(data[11:])
+                        ui.send(data[11:])
                         continue
                     if tmp[0] == "password":
                         ui.send("请在下方输入框输入密码")
+                        ui.password_Mode()
                         continue
                     if tmp[0] == "important":
                         From_User = tmp[1]
