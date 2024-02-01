@@ -2,12 +2,9 @@
 What's new?
 
 Chinese:
-1. 强制关闭客户端功能
-2. 修复关闭后会报错的问题
 
 English:
-1. Force client functionality to be disabled
-2. Fix the issue of error reporting after shutdown
+
 """
 
 # @formatter:on
@@ -25,7 +22,7 @@ flag = True
 ip = "127.0.0.1"  # 默认连接 IP
 port = 10000  # 默认连接端口
 username = ""
-version = "2.3"  # 版本号
+version = "2.3.1"  # 版本号
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 class GUI(object):   # 主窗口
