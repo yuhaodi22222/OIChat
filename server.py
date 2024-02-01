@@ -3,9 +3,11 @@ What's new?
 
 Chinese:
 1. 配置文件改为 json
+2. 加入服务器需要的密码功能
 
 English:
 1. Change the configuration file to JSON
+2. Password function required to join the server
 """
 
 #@formatter:on
