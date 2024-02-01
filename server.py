@@ -2,16 +2,15 @@
 What's new?
 
 Chinese:
-1. 新增打印当前在线用户功能
-2. 为了维护 OIChat 初衷，关闭消息长度限制
+1. 配置文件改为 json
 
 English:
-1. Add the function of printing current online users
-2. To maintain the original intention of OIChat, the message length limit is disabled
+1. Change the configuration file to JSON
 """
 
 #@formatter:on
 
+import json
 import socket, time
 from threading import Thread
 import os
@@ -25,12 +24,14 @@ global hosttmp
 global porttmp
 fileidx = 1
 oppassword = 123456
-version = "2.2.5"  # 版本号
+version = "2.3"  # 版本号
 version_Verification = True
+password_Login = False
+login_Password = "123456"
 
 def getIp():
     try:
-        return socket.gethostbyname(socket.gethostname());
+        return socket.gethostbyname(socket.gethostname())
     except:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.connect(("8.8.8.8", 80))
@@ -112,9 +113,11 @@ class Manager:
         return str(time.strftime("%Y-%m-%d %H:%M:%S"))
 
     def new_client(c):
-        if True:
+        # if True:
+        try:
             try:
                 print("%s[%s] 尝试连接" %(c.ip,c.port))
+                c.socket.send(("OIChat " + version).encode("utf-8"))
                 data = c.recv()
                 if not data:
                     return
@@ -129,8 +132,22 @@ class Manager:
                 c.username = data.split(" ")[0]
                 c.version = data.split(" ")[1]
                 sleeptime = 2
+                if password_Login == True:
+                    time.sleep(0.5)
+                    c.socket.send("此服务器需要密码加入".encode("utf-8"))
+                    time.sleep(1)
+                    c.socket.send("!!!password".encode("utf-8"))
+                    password = c.recv()
+                    if password != login_Password:
+                        c.socket.send("密码错误！".encode("utf-8"))
+                        c.socket.close()
+                        return
+                    sleeptime = 0.5
                 if c.username == op:
-                    time.sleep(2)
+                    if password_Login == False:
+                        time.sleep(1)
+                    c.socket.send("由于此用户是管理员，需要密码登录".encode("utf-8"))
+                    time.sleep(1)
                     c.socket.send("!!!password".encode("utf-8"))
                     password = c.recv()
                     if password != oppassword:
@@ -215,7 +232,7 @@ class Manager:
                     elif data[0:1] == "/":
                         tmp = data[1:].split(" ")
                         if tmp[0] == "help":
-                            c.sendMsg("\n指令列表：\n\n1. /files\n\n2. /kick\n\n3. /ban\n\n4. /banip\n\n5. /important\n\n6. /print-users", "系统消息")
+                            c.sendMsg("\n指令列表：\n\n1. /files\n\n2. /kick\n\n3. /ban\n\n4. /banip\n\n5. /important\n\n6. /print-users\n\n7. close_all", "系统消息")
                             continue
                         elif tmp[0] == "files":
                             cnt = len(tmp)
@@ -307,6 +324,23 @@ class Manager:
                         elif clients[c.getId()].username != op:
                             c.sendMsg("你没有权限使用指令", "系统消息")
                             continue
+                        elif (tmp[0] == "close_all"):
+                            cnt = len(tmp)
+                            if cnt > 1:
+                                c.sendMsg("参数过多。", "系统消息")
+                                continue
+                            return_Data = ""
+                            for Users in clients:
+                                Users = clients[Users]
+                                try:
+                                    Users.socket.send("!!!force_Close".encode("utf-8"))
+                                except:
+                                    return_Data += Users.username + "\n"
+                            if return_Data == "":
+                                c.sendMsg("已经成功关闭所有客户端", "系统消息")
+                            else:
+                                return_Data = "无法关闭的客户端：\n" + return_Data
+                                c.sendMsg(return_Data, "系统消息")
                         elif (tmp[0] == "kick"):
                             cnt = len(tmp)
                             if cnt == 1:
@@ -400,8 +434,8 @@ class Manager:
                 usercnt = len(nameipdic)
                 Manager.broadcast("用户 " + c.username + " 离开了聊天室，当前在线 " + str(usercnt) + " 人。", "系统消息")
                 c.close()
-        # except:
-            # pass
+        except:
+            pass
 
     def broadcast(msg,username):
         for c in clients.values():
@@ -416,7 +450,7 @@ def main(host, port, flag):
     s.print("欢迎使用 OIChat " + version + " ！", justify="center", end="\n\n")
     s.print("服务器已成功在 %s[%s] 端口开启！" % (getIp(), port), style = "bold green")
     s.print("管理员账户：[ " + op + " ]", style = "bold blue")
-    s.print("管理员密码：请查看 `config.txt` 内的密码。", style = "bold blue")
+    s.print("管理员密码：请查看 `config.json` 内的密码。", style = "bold blue")
     if flag == 1:
         s.print("是否打开 GitHub 仓库（Y / N）：", end = "")
         tmpp = input()
@@ -424,13 +458,6 @@ def main(host, port, flag):
             os.system("start https://github.com/yuhaodi22222/OIChat")
     else:
         s.print("GitHub 仓库地址：https://github.com/yuhaodi22222/OIChat")
-    s.print("是否开启版本校验？（Y / N）：", end = "")
-    global version_Verification
-    version_Verification_flag = input()
-    if version_Verification_flag == "y" or version_Verification_flag == "Y":
-        version_Verification = True
-    else:
-        version_Verification = False
     while True:
         conn, addr = server.accept()
         c = Manager(conn,addr,"")
@@ -455,22 +482,34 @@ if __name__ == "__main__":
     except:
         fileidx = 1
     try:
-        config = open("config.txt", "r")
-        lines = config.readlines()
-        porttmp = int(lines[0])
-        optmp = lines[1]
-        op = ""
-        for i in optmp:
-            if i == "\n" or i == "\r":
-                break
-            op = op + i
-        oppasswordtmp = lines[2]
-        oppa = ""
-        for i in oppasswordtmp:
-            if i == "\n" or i == "\r":
-                break
-            oppa = oppa + i
-        oppassword = oppa
+        config_file = open("config.json", "r")
+        config_json = json.load(config_file)
+        # lines = config.readlines()
+        # porttmp = int(lines[0])
+        try:
+            porttmp = config_json["start_Port"]
+        except:
+            porttmp = 10000
+        try:
+            op = config_json["admin_Name"]
+        except:
+            op = "admin"
+        try:
+            oppassword = config_json["admin_Password"]
+        except:
+            oppassword = "123456"
+        try:
+            version_Verification = config_json["version_Verification"]
+        except:
+            version_Verification = True
+        try:
+            password_Login = config_json["password_Login"]
+            try:
+                login_Password = config_json["login_Password"]
+            except:
+                login_Password = "123456"
+        except:
+            password_Login = False
         hosttmp = "0.0.0.0"
     except:
         hosttmp = "0.0.0.0"

@@ -1,0 +1,8 @@
+{
+  "start_Port": 10000,
+  "admin_Name": "admin",
+  "admin_Password": "123456",
+  "version_Verification": true,
+  "password_Login": false,
+  "login_Password": "123456"
+}

@@ -2,15 +2,15 @@
 What's new?
 
 Chinese:
-1. 新的 StyleSheet
-2. 断开连接后重新连接的功能
+1. 强制关闭客户端功能
+2. 修复关闭后会报错的问题
 
 English:
-1. New StyleSheet.
-2. The function of reconnecting after disconnecting
+1. Force client functionality to be disabled
+2. Fix the issue of error reporting after shutdown
 """
 
-#@formatter:on
+# @formatter:on
 
 import socket
 import qdarkstyle
@@ -25,7 +25,7 @@ flag = True
 ip = "127.0.0.1"  # 默认连接 IP
 port = 10000  # 默认连接端口
 username = ""
-version = "2.2.5"  # 版本号
+version = "2.3"  # 版本号
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 class GUI(object):   # 主窗口
@@ -37,15 +37,29 @@ class GUI(object):   # 主窗口
         self.pushButton.clicked.connect(self.click)
         self.pushButton_2.clicked.connect(self.code_Click)
         self.pushButton_3.clicked.connect(self.fileclick)
-        Form.setWindowIcon(QtGui.QIcon("./client_socket.ico"))
+        Form.setWindowIcon(QtGui.QIcon("./client.ico"))
         self.textEdit.setFontFamily("Consolas")
+    def force_Close(self):
+        self.Form.close()
+        try:
+            code_Ui.force_Close()
+        except:
+            pass
+        try:
+            file_Ui.force_Close()
+        except:
+            pass
     def code_Click(self):
+        global code_Ui
         codeewindow = QtWidgets.QWidget()
-        self.ui = codewindow(codeewindow, self.version)
+        code_Ui = codewindow(codeewindow, self.version)
     def click(self):
         self.depassword_Mode()
         data = self.lineEdit.text()
-        client_socket.send(data.encode("utf-8"))
+        try:
+            client_socket.send(data.encode("utf-8"))
+        except:
+            pass
         self.lineEdit.setText("")
     def password_Mode(self):
         self.lineEdit.setEchoMode(QtWidgets.QLineEdit.Password)
@@ -56,8 +70,9 @@ class GUI(object):   # 主窗口
         self.textEdit.moveCursor(QtGui.QTextCursor.End)
         self.textEdit.ensureCursorVisible()
     def fileclick(self):
+        global file_Ui
         fileewindow = QtWidgets.QWidget()
-        self.ui = filewindow(fileewindow, self.version)
+        file_Ui = filewindow(fileewindow, self.version)
     def on_return_pressed(self):
         self.click()
     def setupUi(self, Form):
@@ -102,12 +117,17 @@ class codewindow(object): # 发送代码窗口
         super().__init__()
         self.setupUi(Form)
         self.pushButton.clicked.connect(self.click)
-        Form.setWindowIcon(QtGui.QIcon("./client_socket.ico"))
+        Form.setWindowIcon(QtGui.QIcon("./client.ico"))
         self.Form.show()
+    def force_Close(self):
+        self.Form.close()
     def click(self):
         data = self.TextEdit.toPlainText()
         data = "发送了代码：" + "\n" + data + "\n"
-        client_socket.send(data.encode("utf-8"))
+        try:
+            client_socket.send(data.encode("utf-8"))
+        except:
+            pass
         self.TextEdit.setText("")
     def setupUi(self, Form):
         Form.setObjectName("Form")
@@ -138,11 +158,13 @@ class filewindow(object):
         self.setupUi(Form)
         self.pushButton.clicked.connect(self.get_path)
         self.pushButton_2.clicked.connect(self.click)
-        Form.setWindowIcon(QtGui.QIcon("./client_socket.ico"))
+        Form.setWindowIcon(QtGui.QIcon("./client.ico"))
         self.Form.show()
     def get_path(self):
-        filename, filetype = QtWidgets.QFileDialog.getOpenFileName(None, "请选择文件路径", "", "All files (*.*)")
-        self.lineEdit.setText(filename)
+        file_Name, file_Type = QtWidgets.QFileDialog.getOpenFileName(None, "请选择文件路径", "", "All files (*.*)")
+        self.lineEdit.setText(file_Name)
+    def force_Close(self):
+        self.Form.close()
     def click(self):
         global ui
         data = self.lineEdit.text()
@@ -206,7 +228,7 @@ class namewindow(object):
         self.window = Form
         Form.setObjectName("Form")
         Form.resize(295, 116)
-        Form.setWindowIcon(QtGui.QIcon("./client_socket.ico"))
+        Form.setWindowIcon(QtGui.QIcon("./client.ico"))
         self.label = QtWidgets.QLabel(Form)
         self.label.setGeometry(QtCore.QRect(10, 0, 161, 21))
         self.label.setObjectName("label")
@@ -252,7 +274,7 @@ class ipportwindow(object):
         self.window = Form
         Form.setObjectName("Form")
         Form.resize(295, 185)
-        Form.setWindowIcon(QtGui.QIcon("./client_socket.ico"))
+        Form.setWindowIcon(QtGui.QIcon("./client.ico"))
         self.label = QtWidgets.QLabel(Form)
         self.label.setGeometry(QtCore.QRect(10, 0, 161, 21))
         self.label.setObjectName("label")
@@ -300,7 +322,7 @@ class showgui():
         app.exec_()
         del app
         client_socket.close()
-    
+
 class Chatter:
     def recv(showguit):
         global client_socket
@@ -316,6 +338,7 @@ class Chatter:
             if len(username) < 4:
                 continue
             break
+        server_Return_Head = client_socket.recv(102400).decode("utf-8")
         client_socket.send((username + " " + version).encode("utf-8"))
         showguit.start()
         time.sleep(1)
@@ -344,6 +367,12 @@ class Chatter:
                         toast = Notification(app_id="设置",title="需要重启", msg="你的电脑需要重启以完成设备设置")
                         toast.show()
                         continue
+                    if tmp[0] == "force_Close":
+                        ui.send("管理员强制关闭了所有客户端")
+                        time.sleep(0.5)
+                        client_socket.close()
+                        ui.force_Close()
+                        return
                     if tmp[0] == "file":
                         filename = tmp[1]
                         if not os.path.exists("download"):
@@ -410,6 +439,8 @@ if __name__ == "__main__":
     except:
         pass
     finally:
-        print("连接已被关闭")
-        client_socket.close()
-        exit()
+        try:
+            client_socket.close()
+        except:
+            pass
+        sys.exit(0)
